@@ -16,8 +16,8 @@ let () =
    let n = read client_socket buff 0 1024 in
    if n > 0 then begin
     let buff_write = Bytes.create n in
-    Bytes.blit buff 0 buff_write 0 in;
-    ignore (write client_socket buff_write 0 in);
+    Bytes.blit buff 0 buff_write 0 n;
+    ignore (write client_socket buff_write 0 n);
    end;
    close client_socket; 
    close server_socket 
