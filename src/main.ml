@@ -17,7 +17,8 @@ let () =
    if n > 0 then begin
     let buff_write = Bytes.create n in
     Bytes.blit buff 0 buff_write 0 n;
-    ignore (write client_socket buff_write 0 n);
+    let response = "+PONG\r\n" in
+    ignore (write client_socket (Bytes.of_string response) 0 (String.length response));
    end;
    close client_socket; 
    close server_socket 
