@@ -12,6 +12,12 @@ let () =
 
   (* Uncomment this block to pass the first stage *)
    let (client_socket, _) = accept server_socket in 
-   let _ = write client_socket (String.to_bytes "+PONG\r\n") 0 7 in
+   let buff = Bytes.create 1024 in
+   let n = read client_socket buff_read 0 1024 in
+   if n > 0 then begin
+    let buff_write = Bytes.create n in
+    Bytes.blit buff_read 0 buff_write 0 n;
+    write client_socket buff_write 0 n;
+   end;
    close client_socket; 
    close server_socket 
