@@ -12,5 +12,6 @@ let () =
 
   (* Uncomment this block to pass the first stage *)
    let (client_socket, _) = accept server_socket in 
+   let _ = write client_socket (String.to_bytes "+PONG\r\n") 0 7 in
    close client_socket; 
    close server_socket 
