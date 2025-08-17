@@ -1,24 +1,39 @@
 open Unix
 
-let () =
-  (* You can use print statements as follows for debugging, they'll be visible when running tests. *)
-  Printf.eprintf "Logs from your program will appear here!\n";
+let write_str fd s =
+  let buf = Bytes.of_string s in
+  let pos = 0 in
+  let len = Bytes.length buf in
+  write fd buf pos len
+;;
 
-  (* Create a TCP server socket *)
+let read_str fd =
+  let buf_len = 4096 in
+  let buf = Bytes.create buf_len in
+  let len = read fd buf 0 buf_len in
+  Bytes.sub_string buf 0 len
+;;
+
+let () =
   let server_socket = socket PF_INET SOCK_STREAM 0 in
   setsockopt server_socket SO_REUSEADDR true;
   bind server_socket (ADDR_INET (inet_addr_of_string "127.0.0.1", 6379));
   listen server_socket 1;
-
-  (* Uncomment this block to pass the first stage *)
-   let (client_socket, _) = accept server_socket in 
-   let buff = Bytes.create 1024 in
-   let n = read client_socket buff 0 1024 in
-   if n > 0 then begin
-    let buff_write = Bytes.create n in
-    Bytes.blit buff 0 buff_write 0 n;
-    let response = "+PONG\r\n" in
-    ignore (write client_socket (Bytes.of_string response) 0 (String.length response));
-   end;
-   close client_socket; 
-   close server_socket 
+  let client_socket, _ = accept server_socket in
+  let rec handle_client () =
+    try
+      let msg = read_str client_socket in
+      if String.length msg = 0
+      then (
+        close client_socket;
+        close server_socket)
+      else (
+        ignore (write_str client_socket "+PONG\r\n");
+        handle_client ())
+    with
+    | Unix_error (ECONNRESET, _, _) | End_of_file ->
+      close client_socket;
+      close server_socket
+  in
+  handle_client ()
+;;
